@@ -9,6 +9,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
 
     - name: Installing Node
       uses: actions/setup-node@v4.4.0
@@ -52,6 +53,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
 
     - name: Installing Node
       uses: actions/setup-node@v4.4.0
@@ -164,6 +166,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
 
     - name: Install Node
       uses: actions/setup-node@v4.4.0
@@ -321,6 +324,7 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        fetch-tags: true
 
     - name: Add Windows SDK signtool to PATH
       shell: powershell

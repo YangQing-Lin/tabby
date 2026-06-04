@@ -10,13 +10,32 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
 const electronInfo = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../node_modules/electron/package.json')))
 
-export let version = childProcess.execSync('git describe --tags', { encoding:'utf-8' })
-version = version.substring(1).trim()
-version = version.replace('-', '-c')
-
-if (version.includes('-c')) {
-    version = semver.inc(version, 'prepatch').replace('-0', `-nightly.${process.env.REV ?? 0}`)
+/** 读取最近 tag；fork/浅克隆无 tag 时返回 null，避免 postinstall 失败 */
+function getGitDescribeTag () {
+    try {
+        return childProcess.execSync('git describe --tags', { encoding: 'utf-8' }).trim()
+    } catch {
+        return null
+    }
 }
+
+function resolveVersion () {
+    const described = getGitDescribeTag()
+    if (described) {
+        let v = described.substring(1).trim()
+        v = v.replace('-', '-c')
+        if (v.includes('-c')) {
+            v = semver.inc(v, 'prepatch').replace('-0', `-nightly.${process.env.REV ?? 0}`)
+        }
+        return v
+    }
+    // 无 tag（常见于 fork 未同步 upstream tags）
+    const rev = process.env.REV ?? process.env.GITHUB_RUN_NUMBER ?? '0'
+    const base = process.env.TABBY_VERSION_BASE ?? '1.0.223'
+    return `${base}-nightly.${rev}`
+}
+
+export let version = resolveVersion()
 
 export const builtinPlugins = [
     'tabby-core',
