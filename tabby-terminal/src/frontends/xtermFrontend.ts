@@ -83,6 +83,8 @@ export class XTermFrontend extends Frontend {
     private resizeObserver?: any
     private flowControl: FlowControl
     private pinnedToBottom = true
+    // 待执行的异步 focus，blur 时需取消以免抢回焦点
+    private focusTimeoutId: number | null = null
 
     private configService: ConfigService
     private hotkeysService: HotkeysService
@@ -361,6 +363,7 @@ export class XTermFrontend extends Frontend {
     }
 
     destroy (): void {
+        this.blur()
         super.destroy()
         this.webGLAddon?.dispose()
         this.canvasAddon?.dispose()
@@ -397,7 +400,23 @@ export class XTermFrontend extends Frontend {
     }
 
     focus (): void {
-        setTimeout(() => this.xterm.focus())
+        if (this.focusTimeoutId !== null) {
+            window.clearTimeout(this.focusTimeoutId)
+        }
+        this.focusTimeoutId = window.setTimeout(() => {
+            this.focusTimeoutId = null
+            this.xterm.focus()
+        })
+    }
+
+    blur (): void {
+        if (this.focusTimeoutId !== null) {
+            window.clearTimeout(this.focusTimeoutId)
+            this.focusTimeoutId = null
+        }
+        this.xterm.blur()
+        // 兜底：确保光标 blink 定时器进入 pause（与 xterm WebGL/Canvas renderer 的 handleBlur 一致）
+        this.xtermCore._renderService?.handleBlur()
     }
 
     async write (data: string): Promise<void> {

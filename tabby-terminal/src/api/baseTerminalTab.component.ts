@@ -439,6 +439,7 @@ export class BaseTerminalTabComponent<P extends BaseTerminalProfile> extends Bas
         this.frontend.focus()
 
         this.blurred$.subscribe(() => {
+            this.frontend?.blur()
             this.multifocus.cancel()
         })
 
@@ -451,7 +452,11 @@ export class BaseTerminalTabComponent<P extends BaseTerminalProfile> extends Bas
                         const term = this.frontend.xterm as any
                         term._core._renderService?.clear()
                         term._core._renderService?.handleResize(term.cols, term.rows)
+                        if (this.hasFocus) {
+                            this.frontend.focus()
+                        }
                     } else {
+                        this.frontend.blur()
                         this.frontend.xterm.element?.querySelectorAll('canvas').forEach(c => {
                             c.height = c.width = 0
                             c.style.height = c.style.width = '0px'
@@ -626,6 +631,7 @@ export class BaseTerminalTabComponent<P extends BaseTerminalProfile> extends Bas
     }
 
     async destroy (): Promise<void> {
+        this.frontend?.blur()
         this.frontend?.detach(this.content.nativeElement)
         this.frontend?.destroy()
         this.frontend = undefined
